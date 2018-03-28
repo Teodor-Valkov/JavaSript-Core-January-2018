@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Form Validation</title>
+  <link rel="stylesheet" href="form-validation.css">
+  <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="
+    crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <div id="wrapper">
+    <form id="registerForm">
+      <fieldset id="userInfo">
+        <legend>User Information:</legend>
+        <div class="pairContainer">
+          <label for="username">Username:</label>
+          <input id="username" type="text">
+        </div>
+        <div class="pairContainer">
+          <label for="email">Email:</label>
+          <input id="email" type="text">
+        </div>
+        <div class="pairContainer">
+          <label for="password">Password:</label>
+          <input id="password" type="password">
+        </div>
+        <div class="pairContainer">
+          <label for="confirm-password">Confirm Password:</label>
+          <input id="confirm-password" type="password">
+        </div>
+        <div class="pairContainer">
+          <label for="company">Is Company?</label>
+          <input id="company" type="checkbox">
+        </div>
+      </fieldset>
+      <fieldset id="companyInfo" style="display: none;">
+        <legend>Company Information:</legend>
+        <div class="pairContainer">
+          <label for="companyNumber">Company Number</label>
+          <input id="companyNumber" type="number">
+        </div>
+      </fieldset>
+      <button id="submit">Submit</button>
+    </form>
+    <div id="valid" style="display: none">Valid</div>
+  </div>
+
+  <script>
+    window.onload = function () {
+      validate();
+    }
+  </script>
+
+  <script>
+    function validate() {
+      $('#company').on('change', function () {
+        if ($(this).is(':checked')) {
+          // $('#companyInfo').show();
+          $('#companyInfo').css('display', 'block');
+        } else {
+          // $('#companyInfo').hide()
+          $('#companyInfo').css('display', 'none');
+        }
+      });
+
+      $('#submit').on('click', function (event) {
+        event.preventDefault();
+
+        let usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
+        let passwordRegex = /^\w{5,15}$/;
+        let emailRegex = /@.*\./;
+        let companyNumberRegex = /^[1-9]{1}[0-9]{3}$/;
+
+        let valid = true;
+
+        if (usernameRegex.test($('#username').val())) {
+          $('#username').css('border', 'none');
+        } else {
+          $('#username').css('border', '2px solid red');
+          valid = false;
+        }
+
+        if ($('#email').val().match(emailRegex)) {
+          $('#email').css('border', 'none');
+        } else {
+          $('#email').css('border', '2px solid red');
+          valid = false;
+        }
+        
+        if ($('#password').val().match(passwordRegex)) {
+          $('#password').css('border', 'none');
+        } else {
+          $('#password').css('border', '2px solid red');
+          valid = false;
+        }
+        
+        if ($('#confirm-password').val().match(passwordRegex) && $('#password').val() === $('#confirm-password').val()) {
+          $('#confirm-password').css('border', 'none');
+        } else {
+          $('#confirm-password').css('border', '2px solid red');
+          valid = false;
+        }
+
+        if ($('#company').is(':checked')) {
+          if (companyNumberRegex.test($('#companyNumber').val())) {
+            $('#companyNumber').css('border', 'none');
+          } else {
+            $('#companyNumber').css('border', '2px solid red');
+            valid = false;
+          }
+        }
+
+        if (valid) {
+          //  $('#valid').show();
+          $('#valid').css('display', 'block');
+        } else {
+          // $('#valid').hide();          
+          $('#valid').css('display', 'none');
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

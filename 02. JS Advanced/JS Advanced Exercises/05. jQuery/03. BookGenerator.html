@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Book Generator</title>
+  <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="
+    crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <div id="wrapper"></div>
+
+  <script>
+    window.onload = function () {
+      createBook("#wrapper", "Alice in Wonderland", "Lewis Carroll", 1111);
+    }
+  </script>
+
+  <script>
+    function createBook(selector, titleName, authorName, isbnNumber) {
+      let bookGenerator = (function () {
+        let id = 1;
+
+        return function (selector, titleName, authorName, isbnNumber) {
+          let wrapperDiv = $(selector);
+
+          let bookDiv = $('<div>')
+            .attr('id', `book${id}`);
+
+          let title = $('<p>')
+            .addClass('title')
+            .text(titleName);
+
+          let author = $('<p>')
+            .addClass('author')
+            .text(authorName);
+
+          let isbn = $(`<p class="isbn">${isbnNumber}</p>`);
+
+          let selectButton = $('<button>')
+            .text('Select')
+            .on('click', function () {
+              $(this).parent().css('border', '2px solid blue');
+            });
+
+          let deselectButton = $('<button>')
+            .text('Deselect')
+            .on('click', function () {
+              $(this).parent().css('border', '');
+            });
+
+          bookDiv.append(title);
+          bookDiv.append(author);
+          bookDiv.append(isbn);
+          bookDiv.append(selectButton);
+          bookDiv.append(deselectButton);
+
+          wrapperDiv.append(bookDiv);
+          id++;
+        }
+      })();
+
+      bookGenerator(selector, titleName, authorName, isbnNumber);
+      // bookGenerator(selector, titleName, authorName, isbnNumber);
+      // bookGenerator(selector, titleName, authorName, isbnNumber);
+    }
+  </script>
+</body>
+
+</html>

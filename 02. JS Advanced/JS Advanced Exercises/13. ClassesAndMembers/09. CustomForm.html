@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Form</title>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+<div id="wrapper">
+    <span>I am Wrapper</span>
+    <input type="text" id="username"/>
+    <input type="text" id="password"/>
+</div>
+<div id="root">
+    <span>I am Root</span>
+</div>
+<script defer>
+  let result = (function () {
+  class Textbox {
+    constructor (selector, invalidSymbolsRegex) {
+      this._elements = $(selector);
+      this._invalidSymbols = invalidSymbolsRegex;
+      this.value = $(this._elements[0]).val();
+      this.onInput();
+    }
+
+    // onInput () {
+    //   this.elements.on('input', (event) => {
+    //     let text = $(event.target).val();
+    //     this.value = text;
+    //   });
+    // }
+
+    onInput () {
+     let that = this;
+     this.elements.on('input', function () {
+       let text = $(this).val();
+       that.value = text;
+     })
+    }
+
+    get elements () {
+      return this._elements;
+    }
+
+    get value () {
+      return this._value;
+    }
+    set value (value) {
+      this._value = value;
+
+      for (let element of this.elements) {
+        $(element).val(value);
+      }
+    }
+
+    isValid () {
+      return !this._invalidSymbols.test(this.value);
+    }
+  }
+
+  class Form {
+    constructor () { // or we can use 'constructor (...textboxes)' => like params in C# 
+      this._element = $('<div>').addClass('form');
+      this.textboxes = arguments;
+    }
+
+    get textboxes () {
+      return this._textboxes;
+    }
+    set textboxes (args) {
+      for (let arg of args) {
+        if (!(arg instanceof Textbox)) {
+          throw new Error('The given parameter is not a Textbox.');
+        }
+      }
+
+      this._textboxes = args;
+
+      for (let textbox of this.textboxes) {
+        for (let element of textbox.elements) {
+          this._element.append($(element));
+        }
+      }
+    }
+
+    submit () {
+      let allValid = true;
+
+      for (let textbox of this.textboxes) {
+        if (textbox.isValid()) {
+          for (let element of textbox.elements) {
+            $(element).css('border', '2px solid green');
+          }
+        } else {
+          for (let element of textbox.elements) {
+            $(element).css('border', '2px solid red');
+          }
+
+          allValid = false;
+        }
+      }
+
+      return allValid;
+    }
+
+    attach (selector) {
+      $(selector).append(this._element);
+    }
+  }
+
+  return {
+    Textbox: Textbox,
+    Form: Form
+  };
+})();
+
+  let Textbox = result.Textbox;
+  let Form = result.Form;
+  let username = new Textbox("#username",/[^a-zA-Z0-9]/);
+  let password = new Textbox("#password",/[^a-zA-Z]/);
+  username.value = "username";
+  password.value = "password2";
+  let form = new Form(username,password);
+  form.attach("#root");
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Timer</title>
+  <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="
+    crossorigin="anonymous"></script>
+  <style>
+    #timer {
+      font-size: 5em;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="timer">
+    <span id="hours" class="timer">00</span>:
+    <span id="minutes" class="timer">00</span>:
+    <span id="seconds" class="timer">00</span>
+    <button id="start-timer">Start</button>
+    <button id="stop-timer">Stop</button>
+  </div>
+
+  <script>
+    window.onload = function () {
+      timer();
+    }
+  </script>
+
+  <script>
+    function timer() {
+      let time = 0;
+      let interval = '';
+      let isRunning = false;
+
+      $('#start-timer').attr('disabled', false);
+      $('#stop-timer').attr('disabled', true);
+
+      $('#start-timer').on('click', startTime);
+      $('#stop-timer').on('click', stopTime);
+
+      function startTime() {
+       if (!isRunning) {
+          interval = setInterval(incrementTime, 1000);
+
+          $('#start-timer').attr('disabled', true);
+          $('#stop-timer').attr('disabled', false);
+
+          isRunning = true;
+        }
+      }
+
+      function stopTime() {
+        if (isRunning) {
+          clearInterval(interval);
+
+          $('#start-timer').attr('disabled', false);
+          $('#stop-timer').attr('disabled', true);
+
+          isRunning = false;
+        }
+      }
+
+      function incrementTime() {
+        time++;
+        $('#hours').text(('0' + Math.floor(time / 3600)).slice(-2));
+        $('#minutes').text(('0' + Math.floor((time / 60) % 60)).slice(-2));
+        $('#seconds').text(('0' + Math.floor(time % 60)).slice(-2));
+      }
+    }
+  </script>
+</body>
+
+</html>

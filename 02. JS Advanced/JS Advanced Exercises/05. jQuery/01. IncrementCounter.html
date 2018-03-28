@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Increment Counter</title>
+  <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="
+    crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <div id="wrapper">
+  </div>
+
+  <script>
+    window.onload = function () {
+      increment("#wrapper");
+    }
+  </script>
+
+  <script>
+    function increment(id) {
+      let wrapperDiv = $(id);
+
+      let textarea = $('<textarea>')
+        .addClass('counter')
+        .attr('disabled', true)
+        .val(0);
+
+
+      let incrementButton = $('<button>')
+        .addClass('btn')
+        .attr('id', 'incrementBtn')
+        .text('Increment')
+        .on('click', function () {
+          textarea.val(Number(textarea.val()) + 1);
+        });
+
+      let addButton = $('<button>')
+        .addClass('btn')
+        .attr('id', 'addBtn')
+        .text('Add')
+        .on('click', function () {
+          list.append(`<li>${textarea.val()}</li>`);
+        });
+
+      let list = $('<ul class="results"></ul>');
+
+      wrapperDiv.append(textarea);
+      wrapperDiv.append(incrementButton);
+      wrapperDiv.append(addButton);
+      wrapperDiv.append(list);
+    }
+  </script>
+</body>
+
+</html>

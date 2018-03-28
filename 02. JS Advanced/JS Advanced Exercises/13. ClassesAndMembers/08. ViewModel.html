@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+<div id="wrapper">
+    <input type="text" class="textbox"/>
+    <input type="text" class="textbox"/>
+</div>
+
+<script>
+ class Textbox {
+    constructor(selector, invalidSymbolsRegex){
+      this._elements = $(selector);
+      this._invalidSymbols = invalidSymbolsRegex;
+      this.value = $(this._elements[0]).val();
+      this.onInput();
+    }
+
+    onInput () {
+      let that = this;
+      this.elements.on('input', function () {
+        let text = $(this).val();
+        that.value = text;        
+      })
+    }
+    
+    get elements(){
+        return this._elements;
+    }
+
+    get value(){
+        return this._value;
+    }
+    set value(value){  
+        this._value = value;
+        
+        for (let element of this.elements) {
+          $(element).val(value);
+        }
+    }
+
+    isValid(){
+        return !this._invalidSymbols.test(this.value);
+    }
+}
+
+let invalidSymbolsRegex = /[^A-Za-z0-9]/;
+let textbox = new Textbox('.textbox', invalidSymbolsRegex);
+let input = $('.textbox');
+
+input.on('input', function () {
+  console.log(textbox.value);
+});
+
+</script>
+</body>
+</html>

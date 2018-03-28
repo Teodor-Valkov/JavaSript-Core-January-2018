@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+    crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <input type="text" id="num1" />
+  <input type="text" id="num2" />
+  <input type="text" id="result" readonly />
+  <br>
+  <button id="sumButton">Sum</button>
+  <button id="subtractButton">Subtract</button>
+
+  <script>
+    $(function () {
+      let model = getModel();
+      model.init('#num1', '#num2', '#result');
+      $('#sumButton').click(model.add);
+      $('#subtractButton').click(model.subtract);
+    });
+
+    // Solution with Module pattern with closure
+    //
+    // function getModel() {
+    //   let model = {
+    //     init: function (firstNumberId, secondNumberId, resultId) {
+    //       model.num1 = $(firstNumberId);
+    //       model.num2 = $(secondNumberId);
+    //       model.result = $(resultId);
+    //     },
+    //     add: () => model.action((a, b) => a + b),
+    //     subtract: () => model.action((a, b) => a - b),
+    //     action: function (operation) {
+    //       let firstNumber = Number(model.num1.val());
+    //       let secondNumber = Number(model.num2.val())
+    //       model.result.val(operation(firstNumber, secondNumber));
+    //     }
+    //   }
+    //
+    //   return model;
+    // }
+
+    // Solution with Revealing module pattern with closure
+    //
+    //function getModel() {
+    //  let num1;
+    //  let num2;
+    //  let result;
+    //
+    //  function init(firstNumberId, secondNumberId, resultId) {
+    //    num1 = $(firstNumberId);
+    //    num2 = $(secondNumberId);
+    //    result = $(resultId);
+    //  }
+    //
+    //  function add() {
+    //    return action((a, b) => a + b);
+    //  }
+    //
+    //  function subtract() {
+    //    return action((a, b) => a - b);
+    //  }
+    //
+    //  function action(operation) {
+    //    let firstNumber = Number(num1.val());
+    //    let secondNumber = Number(num2.val());
+    //    
+    //    result.val(operation(firstNumber, secondNumber));
+    //  }
+    //
+    //   return {
+    //    init,
+    //    add,
+    //    subtract
+    //  };
+    //}
+  </script>
+</body>
+
+</html>

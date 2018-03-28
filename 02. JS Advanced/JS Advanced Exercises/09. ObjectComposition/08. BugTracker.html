@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Bug Tracker</title>
+  <style>
+    #wrapper {
+      width: 800px;
+      border: 1px solid black;
+    }
+
+    #titlebar {
+      background-color: beige;
+      font-size: 2em;
+      padding: 0.5em;
+    }
+
+    .report {
+      margin: 1em;
+      border: 1px solid black;
+      width: 400px;
+    }
+
+    .report .title {
+      background-color: cornflowerblue;
+      color: white;
+      padding: 0.25em;
+      position: relative;
+    }
+
+    .report .body p {
+      margin: 0.5em;
+    }
+
+    .report .title .status {
+      display: inline-block;
+      right: 0px;
+      position: absolute;
+      margin-right: 0.5em;
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+    crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <div id="wrapper">
+    <div id="titlebar">Bug tracker</div>
+    <div id="content">
+      <div class="report">
+        <div class="body">
+          <p>Description</p>
+        </div>
+        <div class="title">
+          <span class="author">Submitted by: Author</span>
+          <span class="status">Open | 5</span>
+        </div>
+      </div>
+      <div class="report">
+        <div class="body">
+          <p>Description</p>
+        </div>
+        <div class="title">
+          <span class="author">Submitted by: Author</span>
+          <span class="status">Open | 5</span>
+        </div>
+      </div>
+      <div class="report">
+        <div class="body">
+          <p>Description</p>
+        </div>
+        <div class="title">
+          <span class="author">Submitted by: Author</span>
+          <span class="status">Open | 5</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function bugTracker() {
+      let tracker = (function () {
+        let container = [];
+        let selector = undefined;
+        let counter = 0;
+
+        function output(id) {
+          selector = id;
+        };
+
+        function report(author, descrition, reproducible, severity) {
+          container[counter] = {
+            ID: counter,
+            author: author,
+            description: descrition,
+            reproducible: reproducible,
+            severity: severity,
+            status: 'Open'
+          };
+
+          counter++;
+
+          if (selector) {
+            draw();
+          }
+        };
+
+        function setStatus(id, newStatus) {
+          if (id >= 0 && id < container.length) {
+            container[id].status = newStatus;
+          }
+
+          if (selector) {
+            draw();
+          }
+        };
+
+        function remove(id) {
+          if (id >= 0 && id < container.length) {
+            // container = container.filter(bug => bug.ID != id);
+
+            let index = container.findIndex(bug => bug.ID === id)
+
+            if (index !== -1) {
+              container.splice(index, 1);
+            }
+          }
+
+          if (selector) {
+            draw();
+          }
+        };
+
+        function sort(method) {
+          switch (method) {
+            case 'author':
+              container = container.sort((a, b) => a.author.localeCompare(b.author));
+              break;
+            case 'severity':
+              container = container.sort((a, b) => a.severity - b.severity);
+              break;
+            case 'ID':
+              container = container.sort((a, b) => a.ID - b.ID);
+          }
+
+          if (selector) {
+            draw();
+          }
+        };
+
+        function draw() {
+          $(selector).html('');
+
+          for (let bug of container) {
+            $(selector)
+              .append($('<div>')
+                .attr('id', 'report_' + bug.ID)
+                .addClass('report')
+                .append($('<div>')
+                  .addClass('body')
+                  .append($('<p>')
+                    .text(bug.description)))
+                .append($('<div>')
+                  .addClass('title')
+                  .append($('<span>')
+                    .addClass('author')
+                    .text('Submitted by: ' + bug.author))
+                  .append($('<span>')
+                    .addClass(
+                      'status')
+                    .text(bug.status + ' | ' + bug.severity))));
+          }
+        };
+
+        return {
+          output,
+          report,
+          setStatus,
+          remove,
+          sort
+        };
+      })();
+
+      return tracker;
+    }
+
+    let tracker = bugTracker();
+    tracker.output('#content');
+    tracker.report('first', 'content 1', true, 5);
+    tracker.report('second', 'content 2', true, 3);
+    tracker.report('third', 'content 3', true, 4);
+    tracker.setStatus(0, 'changed');
+    tracker.sort('severity')
+    tracker.remove(1);
+  </script>
+</body>
+
+</html>
