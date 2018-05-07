@@ -1,0 +1,22 @@
+<div class="content">
+  <div class="chirper">
+    <h2 class="titlebar">{{username}}</h2>
+
+    {{> createChirpForm}}
+
+    <div id="myStats" class="user-details">
+        {{> stats}}
+    </div>
+  </div>
+  
+  <div id="myChirps" class="chirps">
+    <h2 class="titlebar">Chirps</h2>
+    <div class="chirp">
+      {{#each chirpList}}
+        {{> chirpItem}}
+      {{else}}
+        <p>No chirps in database</p>
+      {{/each}}
+    </div>
+  </div>
+</div>

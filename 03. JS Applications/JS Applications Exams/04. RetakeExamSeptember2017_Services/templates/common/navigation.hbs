@@ -1,0 +1,11 @@
+<div class="menu">
+  <a href="#/home">Home</a>
+  {{#if username}}
+  <a href="#/discover">Discover</a>
+  <a href="#/myProfile">Me</a>
+  <a href="#/logout">Logout</a>
+  {{else}}
+  <a href="#/login">Login</a>
+  <a href="#/register">Register</a>  
+  {{/if}}
+</div>

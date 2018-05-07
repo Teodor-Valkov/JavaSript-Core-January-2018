@@ -1,0 +1,11 @@
+<section id="viewCatalog">
+    <div class="posts">
+        {{#each postList}} 
+            {{> postItem}} 
+        {{else}}
+            <article class="post">
+                <p>No posts found</p>
+            </article>
+        {{/each}}
+    </div>
+</section>

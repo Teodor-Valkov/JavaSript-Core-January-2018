@@ -1,0 +1,45 @@
+<section id="viewComments">
+  <div class="post">
+    <div class="col thumbnail">
+      <a href="{{post.url}}">
+        <img src="{{post.imageUrl}}">
+      </a>
+    </div>
+    <div class="post-content">
+      <div class="title">
+        <a href="{{post.url}}">
+          {{post.title}}
+        </a>
+      </div>
+      <div class="details">
+        <p>{{post.description}}</p>
+        <div class="info">
+          submitted {{post.time}} ago by {{post.author}}
+        </div>
+        {{#if isPostAuthor}}
+        <div class="controls">
+          <ul>
+            <li class="action">
+              <a class="editLink" href="#/editPost/:{{post._id}}">edit</a>
+            </li>
+            <li class="action">
+              <a class="deleteLink" href="#/deletePost/:{{post._id}}">delete</a>
+            </li>
+          </ul>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+    <div class="clear"></div>
+  </div>
+
+  {{> commentForm}} 
+  
+  {{#each commentList}} 
+    {{> commentItem}} 
+  {{else}}
+    <article class="post post-content">
+      <p>No comments found</p>
+    </article>
+  {{/each}}
+</section>

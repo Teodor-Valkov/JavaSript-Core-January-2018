@@ -1,0 +1,14 @@
+<section id="viewMyPosts">
+  <div class="post post-content">
+    <h1>Your Posts</h1>
+  </div>
+  <div class="posts">
+    {{#each postList}}
+      {{> postItem}}
+    {{else}}
+    <article class="post">
+      <p>No posts found</p>
+    </article>
+    {{/each}}
+  </div>
+</section>

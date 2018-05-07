@@ -1,0 +1,1 @@
+Node Modules with jQuery, Handlebars and Sammy was installed locally (only) in the project folder. It was not commited with the rest of the files.
