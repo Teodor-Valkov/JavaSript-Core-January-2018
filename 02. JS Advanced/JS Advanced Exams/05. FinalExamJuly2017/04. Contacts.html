@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Contacts Builder</title>
+  <style>
+    article {
+      background: #EEE;
+      padding: 1px;
+      width: 250px;
+      margin: 1px;
+    }
+
+    .title {
+      background: #DDD;
+      padding: 5px;
+      font-weight: bold;
+    }
+
+    .title button {
+      float: right
+    }
+
+    .info {
+      margin: 5px;
+    }
+
+    .info span {
+      display: block;
+    }
+
+    .online {
+      background: #9E9;
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+
+<body>
+  <div id="main"></div>
+
+  <script>
+    class Contact {
+      constructor(firstName, lastName, phone, email) {
+        this.firstName = firstName,
+        this.lastName = lastName,
+        this.phone = phone,
+        this.email = email,
+        this.online = false
+      }
+
+      get online() {
+        return this._online;
+      }
+
+      set online(value) {
+        let divTitle = $(`div.title:contains(${this.firstName} ${this.lastName})`)
+
+        if (value) {
+          divTitle.addClass('online');
+        } else if (!value) {
+          divTitle.removeClass('online');
+        }
+
+        this._online = value;
+      }
+
+      render(id) {
+        let container = $(`#${id}`);
+        let article = $('<article>');
+
+        let divTitle = $('<div>').addClass('title').text(`${this.firstName} ${this.lastName}`);
+
+        if (this.online) {
+          divTitle.addClass('online');
+        }
+
+        let divInfo = $('<div>').addClass('info').hide();
+        let spanPhone = $('<span>').html(`&phone; ${this.phone}`);
+        let spanEmail = $('<span>').html(`&#9993; ${this.email}`);
+        divInfo.append(spanPhone).append(spanEmail);
+
+        // let button = $('<button>').html('&#8505;').click(() => divInfo.toggle());
+        let button = $('<button>').html('&#8505;').click(showInfo);
+        divTitle.append(button);
+
+        article.append(divTitle).append(divInfo);
+        container.append(article);
+
+        function showInfo() {
+          let divInfo = $(this).parent().next();
+          
+          if (divInfo.css('display') === 'none') {
+            divInfo.css('display', 'block');
+          } else {
+            divInfo.css('display', 'none');
+          }
+
+          // divInfo.toggle();
+        }
+      }
+    }
+
+    let contacts = [
+      new Contact("Ivan", "Ivanov", "0888 123 456", "i.ivanov@gmail.com"),
+      new Contact("Maria", "Petrova", "0899 987 654", "mar4eto@abv.bg"),
+      new Contact("Jordan", "Kirov", "0988 456 789", "jordk@gmail.com")
+    ];
+
+    contacts.forEach(contact => contact.render('main'));
+    setTimeout(() => contacts[1].online = true, 2000);
+  </script>
+</body>
+
+</html>

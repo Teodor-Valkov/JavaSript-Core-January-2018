@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Manager</title>
+  <style>
+    body {
+      padding: 30px
+    }
+
+    div {
+      margin-bottom: 20px
+    }
+
+    table {
+      border: 1px solid #000;
+      border-collapse: collapse;
+      margin: auto
+    }
+
+    caption {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      background: #000;
+      padding: 5px
+    }
+
+    td,
+    th {
+      padding: 5px 20px;
+      text-align: center
+    }
+
+    tfoot td,
+    th {
+      background: #ccc
+    }
+
+    tr:nth-child(odd) {
+      background: #eee
+    }
+
+    tr:nth-child(even) {
+      background: #ddd
+    }
+
+    tfoot {
+      border-top: 1px solid #000
+    }
+
+    tfoot>tr td {
+      font-style: italic;
+      font-weight: 700
+    }
+
+    button {
+      margin: auto;
+      cursor: pointer
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+</head>
+
+<body>
+  <div id="amazon"></div>
+  <div id="ebay"></div>
+  <div id="walmart"></div>
+
+  <script>
+    class PaymentManager {
+      constructor(title) {
+        this.title = title;
+        this.element = this.createElement();
+      }
+
+      createElement() {
+        let table = $('<table>');
+        let caption = $('<caption>').text(`${this.title} Payment Manager`);
+        let thead = $('<thead>')
+          .append($('<tr>')
+            .append($('<th>').addClass('name').text('Name'))
+            .append($('<th>').addClass('category').text('Category'))
+            .append($('<th>').addClass('price').text('Price'))
+            .append($('<th>').text('Actions')));
+
+        let tbody = $('<tbody>').addClass('payments');
+
+        let tfoot = $('<tfoot>').addClass('input-data')
+          .append($('<tr>')
+            .append($('<td>').append($('<input>').attr('name', 'name').attr('type', 'text')))
+            .append($('<td>').append($('<input>').attr('name', 'category').attr('type', 'text')))
+            .append($('<td>').append($('<input>').attr('name', 'price').attr('type', 'number')))
+            .append($('<td>').append($('<button>').text('Add')).click((event) => addRow(event))));
+        // .append($('<td>').append($('<button>').text('Add')).click(addRow)));
+
+        table.append(caption).append(thead).append(tbody).append(tfoot);
+
+
+        function addRow(event) {
+          let tableBody = $(event.target).parent().parent().parent().parent().find('tbody');
+          let tableFoot = $(event.target).parent().parent().parent().parent().find('tfoot');
+          // let tableBody = $(this).parent().parent().parent().parent().find('tbody');
+          // let tableFoot = $(this).parent().parent().parent().parent().find('tfoot');
+
+          let name = tableFoot.find('tr td').eq(0).find('input').val();
+          let category = tableFoot.find('tr td').eq(1).find('input').val();
+          let price = tableFoot.find('tr td').eq(2).find('input').val();
+
+          if (name === '' || category === '' || price === '') {
+            return;
+          }
+
+          tableBody.append($('<tr>')
+            .append($('<td>').text(name))
+            .append($('<td>').text(category))
+            .append($('<td>').text(Number(price)))
+            .append($('<td>')
+              .append($('<button>').text('Delete').click((event) => deleteRow(event)))));
+          // .append($('<button>').text('Delete').click(deleteRow))));
+
+          tableFoot.find('tr td').eq(0).find('input').val('');
+          tableFoot.find('tr td').eq(1).find('input').val('');
+          tableFoot.find('tr td').eq(2).find('input').val('');
+
+          function deleteRow(event) {
+            let row = $(event.target).parent().parent();
+            // let row = $(this).parent().parent();
+            row.remove();
+          }
+        }
+
+        return table;
+      }
+
+      render(id) {
+        let container = $(`#${id}`);
+        container.append(this.element);
+      }
+    }
+
+    $(function () {
+      let paymentMangersData = [
+        ['amazon', 'Amazon'],
+        ['ebay', 'eBay'],
+        ['walmart', 'Walmart']
+      ]
+
+      for (let [target, title] of paymentMangersData) {
+        let paymentManager = new PaymentManager(title)
+        paymentManager.render(target)
+      }
+    })
+  </script>
+</body>
+
+</html>

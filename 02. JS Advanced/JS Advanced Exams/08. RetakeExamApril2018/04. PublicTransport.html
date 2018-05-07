@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Manager</title>
+  <style>
+    body {
+      padding: 30px
+    }
+
+    caption,
+    table {
+      border: 1px solid #b1cbbb
+    }
+
+    table {
+      border-collapse: collapse;
+      margin: auto
+    }
+
+    caption {
+      font-size: 20px;
+      font-weight: 700;
+      color: #DEEAEE;
+      background: #485788;
+      border-bottom: none;
+      padding: 5px
+    }
+
+    td,
+    th {
+      padding: 5px 20px;
+      text-align: center
+    }
+
+    tfoot td,
+    th {
+      background: #b1cbbb
+    }
+
+    tr:nth-child(odd) {
+      background: #EAF7FB
+    }
+
+    tr:nth-child(even) {
+      background: #C6D1D4
+    }
+
+    button {
+      margin: auto;
+      cursor: pointer
+    }
+
+    input[type=text] {
+      width: 100px
+    }
+
+    tbody>.more-info {
+      background: #E6F1B4 !important
+    }
+
+    tbody tr table {
+      margin: 5px auto 5px 20px;
+      width: 330px;
+    }
+
+    tbody tr table td {
+      background: #eea29a99 !important;
+      text-align: left;
+      width: 170px
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+</head>
+
+<body>
+
+  <table>
+    <caption>{Town name}'s Public Transport</caption>
+    <thead>
+      <tr>
+        <th class="type">Type</th>
+        <th class="name">Name</th>
+        <th>Actions</th>
+      </tr>
+      <tr>
+        <td>
+          <input name="type" type="text">
+        </td>
+        <td>
+          <input name="name" type="text">
+        </td>
+        <td>
+          <button class="search-btn">Search</button>
+          <button class="clear-btn">Clear</button>
+        </td>
+      </tr>
+    </thead>
+    <tbody class="vehicles-info"></tbody>
+  </table>
+
+  <script>
+    class PublicTransportTable {
+      constructor(town) {
+        this.town = town;
+        $('table caption').text(`${this.town}'s Public Transport`);
+      }
+
+      addVehicle(obj) {
+        $('.search-btn').click((event) => search(event));
+        $('.clear-btn').click((event) => clear(event));
+
+        let container = $('.vehicles-info');
+
+        let row = $(
+          `<tr>
+            <td>${obj.type}</td>
+            <td>${obj.name}</td>
+            <td><button>More Info</button></td>
+          </tr>`
+        );
+
+        function showMore(event) {
+          let button = $(event.target).text('Less Info');
+          button.off();
+          button.click((event) => lessInfo(event));
+
+          let row = $(event.target).parent().parent();
+          let nextRow = $(
+            `<tr class="more-info">
+                 <td colspan="3">
+                     <table>
+                         <tr><td>Route: ${obj.route}</td></tr>
+                         <tr><td>Price: ${obj.price}</td></tr>
+                         <tr><td>Driver: ${obj.driver}</td></tr>
+                     </table>
+                 </td>
+             </tr>`
+          );
+
+          nextRow.insertAfter(row);
+        }
+
+        function lessInfo(event) {
+          let button = $(event.target).text('More Info');
+          button.off();
+          button.click((event) => showMore(event));
+
+          let row = $(event.target).parent().parent();
+          let nextRow = row.next();
+          nextRow.remove();
+        }
+
+        function search(event) {
+          let type = $('input').eq(0).val();
+          let name = $('input').eq(1).val();
+
+          if (!type && !name) {
+            return;
+          }
+
+          let rows = $('.vehicles-info').find('> tr');
+
+          if (type && name) {
+            for (let row of rows) {
+              if (!$(row).hasClass('more-info')) {
+                let rowType = $(row).find('td').eq(0).text();
+                let rowName = $(row).find('td').eq(1).text();
+
+                if (!rowType.includes(type) || !rowName.includes(name)) {
+                  SetRowToDisplayNone(row);
+                } else {
+                  $(row).css('display', '')
+                }
+              }
+            }
+          } else if (type) {
+            for (let row of rows) {
+              if (!$(row).hasClass('more-info')) {
+                let rowType = $(row).find('td').eq(0).text();
+
+                if (!rowType.includes(type)) {
+                  SetRowToDisplayNone(row);
+                } else {
+                  $(row).css('display', '')
+                }
+              }
+            }
+          } else if (name) {
+            for (let row of rows) {
+              if (!$(row).hasClass('more-info')) {
+                let rowName = $(row).find('td').eq(1).text();
+
+                if (!rowName.includes(name)) {
+                  SetRowToDisplayNone(row);
+                } else {
+                  $(row).css('display', '')
+                }
+              }
+            }
+          }
+
+          function SetRowToDisplayNone(row) {
+            $(row).css('display', 'none');
+
+            if ($(row).next().hasClass('more-info')) {
+              $(row).find('button').text('More Info');
+              $(row).find('button').off();
+              $(row).find('button').click((event) => showMore(event));
+              $(row).next().remove();
+            }
+          }
+        }
+
+        function clear(event) {
+          let rows = $('.vehicles-info').first().find('> tr');
+
+          for (let row of rows) {
+            $(row).css('display', '');
+          }
+
+          $('input').eq(0).val('');
+          $('input').eq(1).val('');
+        }
+
+        container.append(row);
+
+        container.find('tr:last').find('td button').click((event) => showMore(event));
+      };
+    }
+
+    $(function () {
+      let publicTransportTable = new PublicTransportTable('Sofia')
+
+      let vehiclesDataArr = [{
+          type: 'bus',
+          name: '84',
+          route: 'Sofia airport - Gen. Gurko str.',
+          price: 1.60,
+          driver: 'Pesho'
+        },
+        {
+          type: 'tram',
+          name: '7',
+          route: 'Borovo - metro station Han Kubrat',
+          price: 13.37,
+          driver: 'Misho'
+        },
+        {
+          type: 'bus',
+          name: '280',
+          route: 'Student city - SU Kliment Ohridsky',
+          price: 4.20,
+          driver: 'Gosho'
+        },
+        {
+          type: 'trolleybus',
+          name: '11',
+          route: ' Drujba 1 - Stochna station sq.',
+          price: 2.60,
+          driver: 'Tosho'
+        },
+        {
+          type: 'metro',
+          name: 'M1',
+          route: 'Slivnica - Business Park',
+          price: 3.50,
+          driver: 'Petq'
+        },
+        {
+          type: 'bus',
+          name: '404',
+          route: 'AP Drujba - Central station',
+          price: 1.60,
+          driver: 'Silviq'
+        },
+        {
+          type: 'metro',
+          name: 'M2',
+          route: 'Sofia airport - James Bourchier',
+          price: 5.99,
+          driver: 'Krum'
+        }
+      ]
+
+      for (let vehicleObj of vehiclesDataArr) {
+        publicTransportTable.addVehicle(vehicleObj)
+      }
+    })
+  </script>
+</body>
+
+</html>
