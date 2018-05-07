@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+
+<body>
+  <div>
+    <div>
+      <div id="addBook">
+        <label>ISBN</label>
+        <input type="number" class="isbn">
+        <br>
+        <label>Title</label>
+        <input type="text" class="title">
+        <br>
+        <label>Author</label>
+        <input type="text" class="author">
+        <br>
+      </div>
+    </div>
+
+    <div>
+      <button id="addBookButton">Create Book</button>
+    </div>
+
+    <br/>
+    <br/>
+
+    <div>
+      <table id="books"></table>
+    </div>
+
+    <br/>
+    <br/>
+
+    <div id="editBook">
+      <label>ISBN</label>
+      <input type="number" class="isbn">
+      <br>
+      <label>Title</label>
+      <input type="text" class="title">
+      <br>
+      <label>Author</label>
+      <input type="text" class="author">
+      <br>
+      <input type="hidden" id="bookId">
+      <button id="editBookButton">Edit Book</button>
+    </div>
+  </div>
+
+  <script>
+    attachEvents()
+
+    function attachEvents() {
+      const baseUrl = "https://baas.kinvey.com/appdata/kid_BJp84hLFG";
+      const username = 'sherlock';
+      const password = 'holmes';
+      const base64auth = btoa(`${username}:${password}`);
+      const authHeaders = {
+        'Authorization': `Basic ${base64auth}`,
+        'Content-Type': 'application/json'
+      };
+
+      let tableBooks = $('#books');
+      let divAdd = $('#addBook');
+      let divEdit = $('#editBook');
+
+      let buttonAdd = $('#addBookButton');
+      buttonAdd.click(addBook);
+
+      let buttonEdit = $('#editBookButton');
+      buttonEdit.click(editBook);
+
+      addLoading();
+      loadBooks();
+
+      function request(method, endpoint, data) {
+        return $.ajax({
+          method: method,
+          url: baseUrl + endpoint,
+          headers: authHeaders,
+          data: JSON.stringify(data)
+        })
+      }
+
+      function addLoading() {
+        tableBooks.hide();
+        let divLoading = $('<div>').text('Loading...');
+        $(document.body).prepend(divLoading);
+      }
+
+      function removeLoading() {
+        let divLoading = $('div:contains("Loading...")');
+        divLoading.remove();
+        tableBooks.show();
+      }
+
+      function loadBooks() {
+        hideDivEdit();
+
+        request('GET', '/books')
+          .then(displayBooks)
+          .catch(displayError);
+
+        function displayBooks(books) {
+          let container = $('#books');
+          container.empty();
+
+          let rowHeader = $('<tr>')
+            .append($('<td>').text('ISBN'))
+            .append($('<td>').text('Title'))
+            .append($('<td>').text('Author'))
+            .append($('<td>').text('Action'));
+
+          container.append(rowHeader);
+
+          for (let book of books) {
+            let row = $('<tr>').attr('data-id', book._id)
+              .append($('<td>').text(book.isbn))
+              .append($('<td>').text(book.title))
+              .append($('<td>').text(book.author))
+
+            let buttons = $('<td>');
+            let buttonEdit = $('<button>').text('Edit').click(() => getEditBook(book._id));
+            let buttonDelete = $('<button>').text('Delete').click(() => deleteBook(book._id));
+
+            buttons.append(buttonEdit).append(buttonDelete);
+            row.append(buttons);
+            container.append(row);
+          }
+
+          if (books.length === 0) {
+            let div = $('<div>').text('No books found.');
+            let body = $(document.body);
+            body.append(div);
+          }
+
+          removeLoading();
+        }
+      }
+
+      function addBook() {
+        addLoading();
+
+        let isbn = divAdd.find('.isbn').val();
+        let title = divAdd.find('.title').val();
+        let author = divAdd.find('.author').val();
+
+        let book = {
+          isbn,
+          title,
+          author
+        };
+
+        request('POST', `/books`, book)
+          .then(loadBooks)
+          .catch(displayError);
+
+        divAdd.find('.isbn').val('');
+        divAdd.find('.title').val('');
+        divAdd.find('.author').val('');
+      }
+
+      function getEditBook(bookId) {
+        addLoading();
+
+        request('GET', `/books/${bookId}`)
+          .then(displayDivEdit)
+          .catch(displayError);
+
+        function displayDivEdit(book) {
+          divEdit.find('.isbn').val(book.isbn);
+          divEdit.find('.title').val(book.title);
+          divEdit.find('.author').val(book.author);
+          divEdit.find('#bookId').val(bookId);
+
+          divEdit.show();
+          removeLoading();
+        }
+      }
+
+      function editBook() {
+        addLoading();
+
+        let isbn = divEdit.find('.isbn').val();
+        let title = divEdit.find('.title').val();
+        let author = divEdit.find('.author').val();
+        let bookId = divEdit.find('#bookId').val();
+
+        let book = {
+          isbn,
+          author,
+          title
+        };
+
+        request('PUT', `/books/${bookId}`, book)
+          .then(loadBooks)
+          .catch(displayError);
+
+        hideDivEdit();
+      }
+
+      function deleteBook(bookId) {
+        addLoading();
+
+        request('DELETE', `/books/${bookId}`)
+          .then(loadBooks)
+          .catch(displayError);
+      }
+
+      function hideDivEdit() {
+        divEdit.find('.isbn').val('');
+        divEdit.find('.title').val('');
+        divEdit.find('.author').val('');
+        divEdit.find('#bookId').val('');
+
+        divEdit.hide();
+      }
+
+      function displayError(error) {
+        let divError = $('<div>').css('color', 'red').css('font-weight', 'bold');
+        divError.text(`Error. ${error.status} (${error.statusText})`);
+
+        //$(document.body).prepend(divError);
+
+        //setTimeout(function () {
+        //  $(divError).fadeOut(function () {
+        //    $(divError).remove();
+        //  });
+        //}, 2000);
+
+        $(divError).insertBefore($('body')).delay(2000).fadeOut(function () {
+          $(divError).remove();
+        });
+
+        removeLoading();
+      }
+    }
+  </script>
+</body>
+
+</html>

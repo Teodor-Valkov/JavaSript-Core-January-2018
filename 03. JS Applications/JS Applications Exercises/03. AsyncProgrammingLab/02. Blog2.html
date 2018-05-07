@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Blog</title>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+
+<body>
+  <h1>All Posts</h1>
+  <select id="posts"></select>
+  <h1 id="post-title">Post Details</h1>
+  <ul id="post-body"></ul>
+  <h2>Comments</h2>
+  <ul id="post-comments"></ul>
+  <script>
+    attachEvents();
+
+    function attachEvents() {
+      let baseUrl = 'https://baas.kinvey.com/appdata/kid_SyE4mmltM';
+      let username = 'sherlock';
+      let password = 'holmes';
+      let authHeader = {
+        "Authorization": `Basic ${btoa(`${username}:${password}`)}`
+      };
+
+      let selectList = $('#posts');
+      selectList.change(viewPost);
+
+      loadPosts();
+
+      function loadPosts() {
+        let option = $('<option>').text('Loading...');
+        selectList.append(option);
+
+        selectList.prop('disabled', true);
+
+        $.ajax({
+          url: `${baseUrl}/posts`,
+          headers: authHeader,
+          success: displayPosts,
+          error: displayError,
+          complete: (() => selectList.prop('disabled', false))
+        });
+
+        function displayPosts(posts) {
+          selectList.empty();
+
+          for (let post of posts) {
+            let option = $('<option>').text(post.title).val(post._id);
+            selectList.append(option);
+          }
+        
+          if (posts.length !== 0) {
+            viewPost();
+          }
+        }
+      }
+
+      function viewPost() {
+        selectList.prop('disabled', true);
+
+        let postTitle = $('#post-title');
+        postTitle.empty();
+
+        let postBody = $('#post-body');
+        postBody.empty();
+        postBody.append('<span>').text('Loading...');
+
+        let postComments = $('#post-comments');
+        postComments.empty();
+
+        let postId = selectList.val();
+
+        if (!postId) {
+          return;
+        }
+
+        let postRequest = $.ajax({
+          url: `${baseUrl}/posts/${postId}`,
+          headers: authHeader
+        });
+
+        let commentsRequest = $.ajax({
+          url: `${baseUrl}/comments/?query={"postId":"${postId}"}`,
+          headers: authHeader
+        });
+
+        Promise.all([postRequest, commentsRequest])
+          .then(displayPostWithComments)
+          .catch(displayError);
+
+        function displayPostWithComments([post, comments]) {
+          postTitle.text(post.title);
+          postBody.empty();
+          postBody.text(post.body);
+
+          if (comments.length === 0) {
+            let li = ($('<li>').text('No comments yet'));
+            postComments.append(li);
+          }
+
+          for (let comment of comments) {
+            let li = ($('<li>').text(comment.content));
+            postComments.append(li);
+          }
+          
+          selectList.prop('disabled', false);          
+        }
+      }
+
+      function displayError(error) {
+        let divError = $('<div>').css('color', 'red').css('font-weight', 'bold');
+        divError.text(`Error. ${error.status} (${error.statusText}).`);
+
+        $(document.body).prepend(divError);
+
+        setTimeout(function () {
+          $(divError).fadeOut(function () {
+            $(divError).remove();
+          });
+        }, 2000);
+      }
+    }
+  </script>
+</body>
+
+</html>

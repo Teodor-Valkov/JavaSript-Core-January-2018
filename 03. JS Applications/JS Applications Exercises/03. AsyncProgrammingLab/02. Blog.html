@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Blog</title>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+
+<body>
+  <h1>All Posts</h1>
+  <button id="btnLoadPosts">Load Posts</button>
+  <select id="posts"></select>
+  <button id="btnViewPost">View</button>
+  <h1 id="post-title">Post Details</h1>
+  <ul id="post-body"></ul>
+  <h2>Comments</h2>
+  <ul id="post-comments"></ul>
+  <script>
+    attachEvents();
+
+    function attachEvents() {
+      let baseUrl = 'https://baas.kinvey.com/appdata/kid_SyE4mmltM';
+      let username = 'sherlock';
+      let password = 'holmes';
+      let authHeader = {
+        "Authorization": `Basic ${btoa(`${username}:${password}`)}`
+      };
+
+      let buttonLoad = $('#btnLoadPosts');
+      buttonLoad.click(loadPosts);
+
+      let buttonView = $('#btnViewPost');
+      buttonView.click(viewPost);
+
+      let selectList = $('#posts');
+
+      function loadPosts() {
+        $.ajax({
+          url: `${baseUrl}/posts`,
+          headers: authHeader,
+          success: displayPosts,
+          error: displayError
+        });
+
+        function displayPosts(posts) {
+          selectList.empty();
+
+          for (let post of posts) {
+            let option = $('<option>').text(post.title).val(post._id);
+            selectList.append(option);
+          }
+        }
+      }
+
+      function viewPost() {
+        let postTitle = $('#post-title');
+        
+        let postBody = $('#post-body');
+        postBody.empty();
+
+        let postComments = $('#post-comments');
+        postComments.empty();
+
+        let postId = selectList.val();
+        
+        if (!postId) {
+          return;
+        }
+
+        let postRequest = $.ajax({
+          url: `${baseUrl}/posts/${postId}`,
+          headers: authHeader
+        });
+
+        let commentsRequest = $.ajax({
+          url: `${baseUrl}/comments/?query={"postId":"${postId}"}`,
+          headers: authHeader
+        });
+
+        Promise.all([postRequest, commentsRequest])
+          .then(displayPostWithComments)
+          .catch(displayError);
+
+        function displayPostWithComments([post, comments]) {
+          postTitle.text(post.title);
+          postBody.text(post.body);
+          
+          for (let comment of comments) {
+            let li = ($('<li>').text(comment.content));
+            postComments.append(li);
+          }
+        }
+      }
+
+      function displayError(error) {
+        let divError = $('<div>').css('color', 'red').css('font-weight', 'bold');
+        divError.text(`Error. ${error.status} (${error.statusText}).`);
+
+        $(document.body).prepend(divError);
+
+        setTimeout(function () {
+          $(divError).fadeOut(function () {
+            $(divError).remove();
+          });
+        }, 2000);
+      }
+    }
+  </script>
+</body>
+
+</html>

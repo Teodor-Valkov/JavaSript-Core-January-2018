@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Messenger</title>
+  <style>
+    label {
+      display: inline-block;
+      width: 5em;
+    }
+
+    #author,
+    #content {
+      width: 30em;
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+
+<body>
+  <div id="main">
+    <textarea id="messages" cols="80" rows="12" disabled="true"></textarea>
+    <div id="controls">
+      <label for="author">Name: </label>
+      <input id="author" type="text">
+      <br>
+      <label for="content">Message: </label>
+      <input id="content" type="text">
+      <br>
+      <input id="submit" type="button" value="Send">
+      <input id="refresh" type="button" value="Refresh">
+    </div>
+  </div>
+  <script>
+    attachEvents();
+    
+    function attachEvents() {
+      $('#refresh').click(loadMessages);
+      $('#submit').click(createMessage);
+
+      let baseUrl = 'https://messenger-project-id.firebaseio.com/messenger';
+
+      function loadMessages() {
+        $.get(`${baseUrl}.json`)
+          .then(displayMessages);
+      }
+
+      function displayMessages(messages) {
+        let textareaMessages = $('#messages');
+        textareaMessages.empty();
+
+        let ids = Object.keys(messages);
+        let sortedIds = ids.sort((a, b) => messages[a].timestamp - messages[b].timestamp);
+
+        for (let id of sortedIds) {
+          let author = messages[id].author;
+          let content = messages[id].content;
+
+          textareaMessages.append(`${author}: ${content}\n`);
+        }
+      }
+
+      function createMessage() {
+        let author = $('#author').val();
+        let content = $('#content').val();
+
+        let message = {
+          author: author,
+          content: content,
+          timestamp: Date.now()
+        };
+
+        message = JSON.stringify(message);
+
+        $.post(`${baseUrl}.json`, message)
+          .then(loadMessages)
+
+        $('#author').val('');
+        $('#content').val('');
+      }
+
+      loadMessages();
+    }
+  </script>
+</body>
+
+</html>

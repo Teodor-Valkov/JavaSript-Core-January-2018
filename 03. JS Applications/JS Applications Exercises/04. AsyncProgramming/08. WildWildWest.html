@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Wild Wild West</title>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="canvas.js"></script>
+  <style>
+    canvas {
+      cursor: none;
+    }
+
+    .player {
+      display: inline-table;
+      border: 2px solid darkblue;
+      padding: 5px;
+    }
+
+    .play,
+    .delete {
+      width: 95%;
+      padding: 0 5px 0 5px;
+    }
+
+    button {
+      padding: 5px;
+    }
+
+    fieldset {
+      box-sizing: border-box;
+      width: 800px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="buttons">
+    <button style="display: none;" id="save">Save</button>
+    <button style="display: none;" id="reload">Reload</button>
+  </div>
+  <canvas style="display: none;" width="800" height="600" style="border: 5px solid orange" id="canvas">Canvas not supported</canvas>
+  <fieldset>
+    <legend>Players</legend>
+    <div id="players">
+      <div class="player" data-id="id-goes-here">
+        <div class="row">
+          <label>Name:</label>
+          <label class="name">Pesho</label>
+        </div>
+        <div class="row">
+          <label>Money:</label>
+          <label class="money">500</label>
+        </div>
+        <div class="row">
+          <label>Bullets:</label>
+          <label class="bullets">6</label>
+        </div>
+        <button class="play">Play</button>
+        <button class="delete">Delete</button>
+      </div>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>Add Player</legend>
+    <input type="text" id="addName">
+    <button id="addPlayer">Add Player</button>
+  </fieldset>
+
+  <script>
+    $(document).ready(attachEvents);
+
+    function attachEvents() {
+      const baseUrl = "https://baas.kinvey.com/appdata/kid_SJxijcIFG";
+      const username = 'sherlock';
+      const password = 'holmes';
+      const base64auth = btoa(`${username}:${password}`);
+      const authHeaders = {
+        'Authorization': `Basic ${base64auth}`,
+        'Content-type': 'application/json'
+      };
+
+      let canvas = $('#canvas');
+      let buttonSave = $('#save');
+      let buttonReload = $('#reload');
+      let buttonAdd = $('#addPlayer');
+      buttonAdd.click(addPlayer);
+
+      addLoading();
+      loadPlayers();
+
+      function request(method, endpoint, data) {
+        return $.ajax({
+          method: method,
+          url: baseUrl + endpoint,
+          headers: authHeaders,
+          data: JSON.stringify(data)
+        })
+      }
+
+      function addLoading() {
+        let divLoading = $('<div>').text('Loading...');
+        $(document.body).prepend(divLoading);
+      }
+
+      function removeLoading() {
+        let divLoading = $('div:contains("Loading...")');
+        divLoading.remove();
+      }
+
+      function loadPlayers() {
+        request('GET', '/players')
+          .then(displayPlayers)
+          .catch(displayError);
+
+        function displayPlayers(players) {
+          let container = $('#players');
+          container.empty();
+
+          for (let player of players) {
+            let divPlayer = $('<div>').addClass('player').attr('data-id', player._id)
+
+            let divName = $('<div>').addClass('row')
+              .append($('<label>').text('Name: '))
+              .append($('<label>').addClass('name').text(player.name));
+
+            let divMoney = $('<div>').addClass('row')
+              .append($('<label>').text('Money: '))
+              .append($('<label>').addClass('money').text(player.money));
+
+            let divBullets = $('<div>').addClass('row')
+              .append($('<label>').text('Bullets: '))
+              .append($('<label>').addClass('bullets').text(player.bullets));
+
+            let buttonPlay = $('<button>').addClass('play').text('Play').click(() => play(player));
+            let buttonDelete = $('<button>').addClass('delete').text('Delete').click(deletePlayer);
+
+            divPlayer.append(divName).append(divMoney).append(divBullets).append(buttonPlay).append(buttonDelete);
+            container.append(divPlayer);
+          }
+
+          removeLoading();
+        }
+      }
+
+      function play(player) {
+        canvas.css('display', 'block');
+        buttonSave.css('display', 'inline-block').click(() => savePlayer(player));
+        buttonReload.css('display', 'inline-block').click(() => reload(player));
+
+        if (player.bullets === 0) {
+          buttonReload.attr('disabled', false);
+        } else {
+          buttonReload.attr('disabled', true);
+        }
+
+        loadCanvas(player);
+      }
+
+      function addPlayer() {
+        addLoading();
+
+        let name = $('#addName').val();
+        let money = 500;
+        let bullets = 6;
+
+        let player = {
+          name,
+          money,
+          bullets
+        };
+
+        request('POST', '/players', player)
+          .then(loadPlayers)
+          .catch(displayError);
+
+        $('#addName').val('');
+      }
+
+      function deletePlayer() {
+        addLoading();
+
+        let playerId = $(this).parent().attr('data-id');
+
+        request('DELETE', `/players/${playerId}`)
+          .then(loadPlayers)
+          .catch(displayError);
+      }
+
+      function reload(player) {
+        player.money -= 60;
+        player.bullets += 6;
+
+        buttonReload.attr('disabled', true);
+      }
+
+      function savePlayer(player) {
+        request('PUT', `/players/${player._id}`, player)
+          .then(loadPlayers)
+          .catch(displayError);
+      }
+
+      function displayError(error) {
+        let divError = $('<div>').css('color', 'red').css('font-weight', 'bold');
+        divError.text(`Error. ${error.status} (${error.statusText})`);
+
+        // $(divError).insertBefore($('body')).delay(2000).fadeOut(function () {
+        //     $(divError).remove();
+        // });
+
+        $(document.body).prepend(divError);
+
+        setTimeout(function () {
+          $(divError).fadeOut(function () {
+            $(divError).remove();
+          });
+        }, 2000);
+
+        removeLoading();
+      }
+    }
+  </script>
+</body>
+
+</html>

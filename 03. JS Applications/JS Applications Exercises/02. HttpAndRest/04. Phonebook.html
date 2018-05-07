@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Phonebook in Firebase</title>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+
+<body>
+  <h1>Phonebook</h1>
+  <ul id="phonebook"></ul>
+  <button id="btnLoad">Load</button>
+
+  <h2>Create Contact</h2>
+  Person:
+  <input type="text" id="person" />
+  <br> Phone:
+  <input type="text" id="phone" />
+  <br>
+  <button id="btnCreate">Create</button>
+
+  <script>
+    $(function () {
+      let loadButton = $('#btnLoad')
+      loadButton.click(loadContacts);
+
+      let createButton = $('#btnCreate')
+      createButton.click(createContact);
+
+      let container = $('#phonebook');
+      let baseUrl = 'https://phonebook-project-id.firebaseio.com/';
+
+      function loadContacts() {
+        container.empty();
+
+        $.get(`${baseUrl}.json`)
+          .then(displayContacts)
+          .catch(displayError);
+      }
+
+      function displayContacts(contacts) {
+        for (let id in contacts) {
+          let person = contacts[id]['person'];
+          let phone = contacts[id]['phone'];
+
+          let liContact = $('<li>').text(person + ': ' + phone + ' ');
+          let linkDelete = $('<a>').attr('href', '#').text('[Delete]').click(() => deleteContact(id));
+
+          liContact.append(linkDelete);
+          container.append(liContact);
+        }
+      }
+
+      function displayError(error) {
+        container.append($('<li>').text(`Error. ${error.status} ${error.statusText}`));
+      }
+
+      function createContact() {
+        container.empty();
+
+        let name = $('#person').val();
+        let phone = $('#phone').val();
+
+        if (name === '' || phone === '') {
+          container.append($('<li>').text(`Error. Invalid name or phone.`));
+          return;
+        }
+
+        let contact = {
+          person: name,
+          phone: phone
+        };
+
+        contact = JSON.stringify(contact);
+
+        $.post(`${baseUrl}.json`, contact)
+          .then(loadContacts)
+          .catch(displayError);
+
+        $('#person').val('');
+        $('#phone').val('');
+      }
+
+      function deleteContact(id) {
+        let deleteRequest = {
+          method: 'DELETE',
+          url: `${baseUrl}/${id}.json`
+        };
+
+        $.ajax(deleteRequest)
+          .then(loadContacts)
+          .catch(displayError);
+      }
+    })
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Countries and Towns</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <style>
+    .half {
+      width: 25%;
+      display: inline-block;
+      margin-bottom: 30px;
+    }
+
+    .add {
+      margin-top: 30px;
+    }
+
+    .half>.title {
+      font-size: 30px;
+      text-align: center;
+    }
+
+    .half .controls {
+      text-align: center;
+    }
+
+    select {
+      width: 100%;
+      font-size: 15px;
+      text-align: center;
+    }
+
+    #editCountry,
+    #editTown,
+    #error,
+    .add {
+      display: none;
+    }
+
+    #error {
+      display: none;
+      color: red;
+      font-size: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="half">
+    <div class="title">Countries</div>
+    <select id="countries" size="10"></select>
+
+    <div class="controls">
+      <button id="btnAddCountry">Add</button>
+      <button id="btnEditCountry">Edit</button>
+      <button id="buttonDeleteCountry">Delete</button>
+      <button id="buttonListTowns">List Towns</button>
+    </div>
+  </div>
+
+  <div class="half">
+    <div class="title">Towns</div>
+    <select id="towns" size="10"></select>
+
+    <div class="controls">
+      <button id="btnAddTown">Add</button>
+      <button id="btnEditTown">Edit</button>
+      <button id="buttonDeleteTown">Delete</button>
+    </div>
+  </div>
+
+  <div id="error"></div>
+
+  <div id="editCountry">
+    <label for="inputEditCountry">New name:</label>
+    <input type="text" id="inputEditCountry" />
+    <button id="buttonEditCountry">Edit</button>
+  </div>
+
+  <div id="editTown">
+    <label for="inputEditTownName">New name:</label>
+    <input type="text" id="inputEditTownName" />
+    <label for="inputEditTownCountry">New country:</label>
+    <input type="text" id="inputEditTownCountry" />
+    <button id="buttonEditTown">Edit</button>
+  </div>
+
+  <div class="add">
+    <label for="inputAddCountry">Name:</label>
+    <input type="text" id="inputAddCountry" />
+    <button id="buttonAddCountry">Add Country</button>
+  </div>
+
+  <div class="add">
+    <label for="inputAddTown">Name:</label>
+    <input type="text" id="inputAddTown" />
+    <label for="inpuAddTownCountry">Country:</label>
+    <input type="text" id="inputAddTownCountry" />
+    <button id="buttonAddTown">Add Town</button>
+  </div>
+
+
+  <script>
+    countriesAndTowns()
+
+    function countriesAndTowns() {
+      const baseUrl = "https://baas.kinvey.com/appdata/kid_H14Y_jvKG";
+      const username = 'sherlock';
+      const password = 'holmes';
+      const base64auth = btoa(`${username}:${password}`);
+      const authHeaders = {
+        'Authorization': `Basic ${base64auth}`,
+        'Content-Type': 'application/json'
+      };
+
+      let containerCountries = $('#countries');
+      let containerTowns = $('#towns');
+      let containerError = $('#error');
+      let containerAddCountry = $('.add:first');
+      let containerAddTown = $('.add:last');
+      let containerEditCountry = $('#editCountry');
+      let containerEditTown = $('#editTown');
+      let countryName;
+      let townName;
+      let countryId;
+      let townId;
+
+      attachEvents();
+
+      function attachEvents() {
+        $('#btnAddCountry').click(function () {
+          containerAddCountry.fadeIn();
+        });
+
+        $('#buttonAddCountry').click(addCountry);
+        $('#btnEditCountry').click(getEditCountry);
+        $('#buttonEditCountry').click(editCountry);
+        $('#buttonDeleteCountry').click(deleteCountry);
+
+        $('#btnAddTown').click(function () {
+          containerAddTown.fadeIn();
+        });
+
+        $('#buttonAddTown').click(addTown);
+        $('#btnEditTown').click(getEditTown);
+        $('#buttonEditTown').click(editTown);
+        $('#buttonDeleteTown').click(deleteTown);
+        $('#buttonListTowns').click(loadTowns);
+      }
+
+      loadCountries();
+
+      function addLoading() {
+        let divLoading = $('<div>').text('Loading...');
+        $(document.body).prepend(divLoading);
+      }
+
+      function removeLoading() {
+        let divLoading = $('div:contains("Loading...")');
+        divLoading.remove();
+      }
+
+      function request(method, endpoint, data) {
+        return $.ajax({
+          method: method,
+          url: baseUrl + endpoint,
+          headers: authHeaders,
+          data: JSON.stringify(data)
+        })
+      }
+
+      function loadCountries() {
+        addLoading();
+
+        request('GET', '/countries')
+          .then(displayCountries)
+          .catch(displayError);
+
+        function displayCountries(countries) {
+          containerCountries.empty();
+
+          for (let country of countries) {
+            let option = $('<option>').val(country._id).text(country.name);
+            containerCountries.append(option);
+          }
+
+          removeLoading();
+        }
+      }
+
+      function loadTowns() {
+        addLoading();
+        countryName = containerCountries.find('option:selected').text();
+
+        request('GET', '/towns')
+          .then(displayTowns)
+          .catch(displayError);
+
+        function displayTowns(towns) {
+          containerTowns.empty();
+          towns = towns.filter(town => town.country === countryName);
+
+          for (let town of towns) {
+            let option = $('<option>').val(town._id).text(town.name);
+            containerTowns.append(option);
+          }
+
+          removeLoading();
+        }
+      }
+
+      function addCountry() {
+        addLoading();
+        containerAddCountry.fadeOut();
+
+        countryName = $('#inputAddCountry').val();
+        let countries = containerCountries.find('option').toArray();
+        let isCountryExisting = countries.some(country => $(country).text() === countryName);
+
+        if (!isCountryExisting) {
+          let country = {
+            name: countryName
+          };
+
+          request('POST', '/countries', country)
+            .then(loadCountries)
+            .catch(displayError);
+        } else {
+          containerError.text(`${countryName} already exists.`);
+          containerError.delay(500).fadeIn();
+          containerError.delay(500).fadeOut();
+        }
+
+        $('#inputAddCountry').val('');
+      }
+
+      function addTown() {
+        addLoading();
+        containerAddTown.fadeOut();
+
+        townName = $('#inputAddTown').val();
+        countryName = $('#inputAddTownCountry').val();
+
+        let countries = containerCountries.find('option').toArray();
+
+        let isCountryExisting = countries.some(country => $(country).text() === countryName);
+
+        if (isCountryExisting) {
+          let town = {
+            name: townName,
+            country: countryName
+          };
+
+          request('POST', '/towns', town)
+            .then(loadTowns)
+            .catch(displayError);
+        } else {
+          setTimeout(function () {
+            containerError.text(`${countryName} does not exist.`);
+            containerError.fadeIn();
+          }, 500);
+
+          containerError.fadeOut();
+        }
+
+        $('#inputAddTown').val('');
+        $('#inputAddTownCountry').val('');
+      }
+
+      function getEditCountry() {
+        let country = containerCountries.find('option:selected');
+        countryId = country.val();
+        countryName = country.text();
+
+        $('#inputEditCountry').val(countryName);
+        containerEditCountry.fadeIn();
+      }
+
+      function editCountry() {
+        addLoading();
+
+        let country = {
+          name: $('#inputEditCountry').val()
+        };
+
+        request('PUT', `/countries/${countryId}`, country)
+          .then(loadCountries)
+          .catch(displayError);
+
+        containerEditCountry.fadeOut();
+        $('#inputEditCountry').val('');
+
+        removeLoading();
+      }
+
+      function getEditTown() {
+        addLoading();
+        townId = containerTowns.find('option:selected').val();
+
+        request('GET', `/towns/${townId}`)
+          .then(displayDivEdit)
+          .catch(displayError);
+
+        function displayDivEdit(data) {
+          $('#inputEditTownName').val(data.name);
+          $('#inputEditTownCountry').val(data.country);
+          containerEditTown.fadeIn();
+        }
+
+        removeLoading();
+      }
+
+      function editTown() {
+        addLoading();
+
+        let town = {
+          name: $('#inputEditTownName').val(),
+          country: $('#inputEditTownCountry').val()
+        };
+
+        request('PUT', `/towns/${townId}`, town)
+          .then(loadTowns)
+          .catch(displayError);
+
+        containerEditTown.fadeOut();
+        $('#inputEditTownName').val('');
+        $('#inputEditTownCountry').val('');
+
+        removeLoading();
+      }
+
+      function deleteCountry() {
+        addLoading();
+
+        countryId = containerCountries.find('option:selected').val();
+
+        request('DELETE', `/countries/${countryId}`)
+          .then(loadCountries)
+          .catch(displayError);
+      
+        removeLoading();
+      }
+
+      function deleteTown() {
+        addLoading();
+
+        townId = containerTowns.find('option:selected').val();
+
+        request('DELETE', `/towns/${townId}`)
+          .then(loadTowns)
+          .catch(displayError);
+
+        removeLoading();
+      }
+
+      function displayError(error) {
+        let divError = $('<div>').css('color', 'red').css('font-weight', 'bold');
+        divError.text(`Error. ${error.status} (${error.statusText})`);
+
+        //$(document.body).prepend(divError);
+
+        //setTimeout(function () {
+        //  $(divError).fadeOut(function () {
+        //    $(divError).remove();
+        //  });
+        //}, 2000);
+
+        $(divError).insertBefore($('body')).delay(2000).fadeOut(function () {
+          $(divError).remove();
+        });
+
+        removeLoading();
+      }
+    }
+  </script>
+</body>
+
+</html>

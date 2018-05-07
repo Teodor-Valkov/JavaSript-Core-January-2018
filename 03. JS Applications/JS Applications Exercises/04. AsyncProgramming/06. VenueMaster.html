@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Venue Master</title>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <style>
+    #content {
+      width: 800px;
+    }
+
+    .venue {
+      border: 1px solid black;
+      margin: 0.5em;
+    }
+
+    .venue-name {
+      background-color: beige;
+      padding: 0.1em;
+      display: block;
+      font-size: 2em;
+      padding-left: 1em;
+    }
+
+    .venue-name input {
+      margin-right: 1em;
+    }
+
+    .head {
+      background-color: beige;
+      padding: 0.1em;
+      padding-left: 1.5em;
+      display: block;
+      font-size: 1.5em;
+    }
+
+    .description {
+      margin: 2em;
+    }
+
+    table {
+      text-align: center;
+      margin: 2em;
+    }
+
+    td,
+    th {
+      width: 100px;
+    }
+
+    .purchase-info span {
+      display: inline-block;
+      width: 100px;
+      margin-left: 2em;
+      margin-right: 2em;
+    }
+
+    .ticket {
+      border: 1px solid black;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .bl {
+      display: inline-block;
+      font-size: 1.5em;
+      margin: 1em 3em 1em 3em;
+    }
+
+    .left {
+      width: 600px;
+      float: left;
+    }
+
+    .right {
+      float: right;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="content">
+    <div id="date-control">
+      <input type="text" id="venueDate" placeholder="Enter date">
+      <input type="button" id="getVenues" value="List Venues">
+    </div>
+    <div id="venue-info"></div>
+  </div>
+
+  <script>
+    attachEvents();
+
+    function attachEvents() {
+      const baseUrl = 'https://baas.kinvey.com/';
+      const appId = 'kid_BJ_Ke8hZg';
+      const username = 'guest';
+      const password = 'pass';
+      const base64Auth = btoa(`${username}:${password}`);
+      const authHeaders = {
+        'Authorization': `Basic ${base64Auth}`,
+        'Content-Type': 'application/json'
+      };
+
+      function addLoading() {
+        let divLoading = $('<div>').text('Loading...');
+        $(document.body).prepend(divLoading);
+      }
+
+      function removeLoading() {
+        let divLoading = $('div:contains("Loading...")');
+        divLoading.remove();
+      }
+
+      function request(method, endpoint, data) {
+        return $.ajax({
+          method: method,
+          url: baseUrl + endpoint,
+          headers: authHeaders,
+          data: JSON.stringify(data)
+        })
+      }
+
+      let divVenuesContainer = $('#venue-info');
+      let buttonLoadVenues = $('#getVenues');
+      buttonLoadVenues.click(loadVenues);
+
+      function loadVenues() {
+        addLoading();
+
+        let date = $('#venueDate').val();
+
+        request('POST', `rpc/${appId}/custom/calendar?query=${date}`)
+          .then(displayVenues)
+          .catch(displayError);
+
+        function displayVenues(venueIds) {
+          for (let venueId of venueIds) {
+            request('GET', `appdata/${appId}/venues/${venueId}`)
+              .then(displayVenue)
+              .catch(displayError);
+          }
+
+          removeLoading();
+        }
+      }
+
+      function displayVenue(venue) {
+        let divVenueContainer = $('<div>').addClass('venue').attr('venue-id', venue._id);
+        let spanVenueName = $('<span>').addClass('venue-name');
+        let buttonMoreInfo = $('<input>').addClass('info').attr('type', 'button').val('More info').click(showMoreInfo);
+
+        let divVenueDetails = $('<div>').addClass('venue-details').css('display', 'none');
+        let tableTickets = $('<table>');
+        let rowHeader = $('<tr>')
+          .append($('<th>').text('Price'))
+          .append($('<th>').text('Quantity'))
+          .append($('<th>').text('Action'));
+
+        let rowData = ($('<tr>')
+          .append($('<td>').addClass('venue-price').text(`${venue.price} lv`))
+          .append($('<td>').append($('<select>').addClass('quantity')
+            .append($('<option>').val("1").text("1"))
+            .append($('<option>').val("2").text("2"))
+            .append($('<option>').val("3").text("3"))
+            .append($('<option>').val("4").text("4"))
+            .append($('<option>').val("5").text("5"))))
+          .append($('<td>').append($('<input>').addClass('purchase').attr('type', 'button').val('Purchase').click(
+            purchase))));
+
+        let spanVenueDescription = $('<span>').addClass('head').text('Venue description:');
+        let paragraphDescripton = $('<p>').addClass('description').text(venue.description);
+        let paragraphStartingTime = $('<p>').addClass('description').text(`Starting time: ${venue.startingHour}`);
+
+        spanVenueName.text(venue.name);
+        spanVenueName.prepend(buttonMoreInfo);
+        tableTickets.append(rowHeader).append(rowData);
+
+        divVenueDetails.append(tableTickets)
+        divVenueDetails.append(spanVenueDescription);
+        divVenueDetails.append(paragraphDescripton);
+        divVenueDetails.append(paragraphStartingTime);
+
+        divVenueContainer.append(spanVenueName);
+        divVenueContainer.append(divVenueDetails);
+        divVenuesContainer.append(divVenueContainer);
+      }
+
+      function showMoreInfo() {
+        $(this).parent().parent().find('.venue-details').toggle();
+      }
+
+      function purchase() {
+        let id = $(this).parent().parent().parent().parent().parent().attr('venue-id');
+        let name = $(this).parent().parent().parent().parent().parent().find('.venue-name').text();
+        let quantity = Number($(this).parent().parent().find('.quantity').val());
+        let price = Number($(this).parent().parent().find('.venue-price').text().substring(0, $(this).parent().parent()
+          .find('.venue-price').text().length - 2));
+
+        divVenuesContainer.html(
+          `<span class="head">Confirm purchase</span>
+             <div class="purchase-info">
+               <span>${name}</span>
+               <span>${quantity} x ${price}</span>
+               <span>Total: ${quantity * price} lv</span>
+               <input type="button" id="purchase" value="Confirm">
+             </div>
+            `
+        );
+
+        $('#purchase').click(confirm)
+
+        function confirm() {
+          addLoading();
+
+          request('POST', `rpc/${appId}/custom/purchase?venue=${id}&qty=${quantity}`)
+            .then(displayResult)
+            .catch(displayError);
+
+          function displayResult(data) {
+            divVenuesContainer.html(`<p>You may print this page as your ticket:</p>${data.html}`);
+            removeLoading();
+          }
+        }
+      }
+
+      function displayError(error) {
+        let divError = $('<div>').css('color', 'red').css('font-weight', 'bold');
+        divError.text(`Error. ${error.status} (${error.statusText})`);
+
+        $(document.body).prepend(divError);
+
+        setTimeout(function () {
+          $(divError).fadeOut(function () {
+            $(divError).remove();
+          });
+        }, 2000);
+
+        // $(divError).insertBefore($('body')).delay(2000).fadeOut(function () {
+        //   $(divError).remove();
+        // });
+
+        removeLoading();
+      }
+    }
+  </script>
+</body>
+
+</html>

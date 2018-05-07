@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Biggest Catch</title>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <style>
+        h1 {
+            text-align: center;
+        }
+
+        input {
+            display: block;
+        }
+
+        div {
+            border: 1px solid black;
+            padding: 5px;
+            display: inline-table;
+            width: 24%;
+        }
+
+        div#aside {
+            margin-top: 8px;
+            width: 15%;
+            border: 2px solid grey;
+        }
+
+        div#catches {
+            width: auto;
+        }
+
+        button {
+            display: inline-table;
+            margin: 5% 0 5% 5%;
+            width: 39%;
+        }
+
+        button.add {
+            width: 90%;
+        }
+
+        button.load {
+            width: 90%;
+            padding: 10px;
+        }
+
+        button.load {
+            vertical-align: top;
+        }
+
+        fieldset {
+            display: inline-table;
+            vertical-align: top;
+        }
+
+        fieldset#main {
+            width: 70%;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Biggest Catches</h1>
+    <fieldset id="main">
+        <legend>Catches</legend>
+        <div id="catches">
+            <div class="catch" data-id="id-goes-here">
+                <label>Angler</label>
+                <input type="text" class="angler" value="Paulo Amorim" />
+                <label>Weight</label>
+                <input type="number" class="weight" value="636" />
+                <label>Species</label>
+                <input type="text" class="species" value="Atlantic Blue Marlin" />
+                <label>Location</label>
+                <input type="text" class="location" value="Vitória, Brazil" />
+                <label>Bait</label>
+                <input type="text" class="bait" value="trolled pink" />
+                <label>Capture Time</label>
+                <input type="number" class="captureTime" value="80" />
+                <button class="update">Update</button>
+                <button class="delete">Delete</button>
+            </div>
+        </div>
+    </fieldset>
+    <div id="aside">
+        <button class="load">Load</button>
+        <fieldset id="addForm">
+            <legend>Add Catch</legend>
+            <label>Angler</label>
+            <input type="text" class="angler" />
+            <label>Weight</label>
+            <input type="number" class="weight" />
+            <label>Species</label>
+            <input type="text" class="species" />
+            <label>Location</label>
+            <input type="text" class="location" />
+            <label>Bait</label>
+            <input type="text" class="bait" />
+            <label>Capture Time</label>
+            <input type="number" class="captureTime" />
+            <button class="add">Add</button>
+        </fieldset>
+    </div>
+
+    <script>
+        attachEvents()
+
+        function attachEvents() {
+            const baseUrl = 'https://baas.kinvey.com/appdata/kid_BJctobHtf';
+            const username = 'sherlock';
+            const password = 'holmes';
+            const base64auth = btoa(`${username}:${password}`);
+            const authHeaders = {
+                'Authorization': `Basic ${base64auth}`,
+                'Content-type': 'application/json'
+            };
+
+            $('#aside').find('.load').click(loadCatches);
+            $('#addForm').find('.add').click(addCatch);
+
+            loadCatches();
+
+            function request(method, endpoint, data) {
+                return $.ajax({
+                    method: method,
+                    url: baseUrl + endpoint,
+                    headers: authHeaders,
+                    data: JSON.stringify(data)
+                })
+            }
+
+            function loadCatches() {
+                request('GET', '/biggestCatches')
+                    .then(displayCatches)
+                    .catch(displayError);
+            }
+
+            function displayCatches(catches) {
+                let container = $('#catches');
+                container.empty();
+
+                for (let el of catches) {
+                    let divCatch = $('<div>').addClass('catch').attr('data-id', el._id);
+
+                    let labelAngler = $('<label>').text('Angler');
+                    let inputAngler = $('<input>').addClass('angler').attr('type', 'text').val(
+                        el['angler']);
+                    let labelWeight = $('<label>').text('Weight');
+                    let inputWeight = $('<input>').addClass('weight').attr('type', 'text').val(el['weight']);
+                    let labelSpecies = $('<label>').text('Species');
+                    let inputSpecies = $('<input>').addClass('species').attr('type', 'text').val(el['species']);
+                    let labelLocation = $('<label>').text('Location');
+                    let inputLocation = $('<input>').addClass('location').attr('type', 'text').val(el['location']);
+                    let labelBait = $('<label>').text('Bait');
+                    let inputBait = $('<input>').addClass('bait').attr('type', 'text').val(el['bait']);
+                    let labelCaptureTime = $('<label>').text('Capture Time');
+                    let inputCaptureTime = $('<input>').addClass('captureTime').attr('type', 'text').val(el[
+                        'captureTime']);
+
+                    let buttonUpdate = $('<button>').addClass('update').text('Update').click(updateCatch);
+                    let buttonDelete = $('<button>').addClass('delete').text('Delete').click(deleteCatch);
+
+
+                    divCatch.append(labelAngler).append(inputAngler);
+                    divCatch.append(labelWeight).append(inputWeight);
+                    divCatch.append(labelSpecies).append(inputSpecies);
+                    divCatch.append(labelLocation).append(inputLocation);
+                    divCatch.append(labelBait).append(inputBait);
+                    divCatch.append(labelCaptureTime).append(inputCaptureTime);
+                    divCatch.append(buttonUpdate).append(buttonDelete);
+                    container.append(divCatch);
+                }
+            }
+
+            function addCatch() {
+                let catchElement = $(this).parent();
+                let data = getCatchObject(catchElement);
+
+                request('POST', '/biggestCatches', data)
+                    .then(loadCatches)
+                    .catch(displayError)
+            }
+
+            function updateCatch() {
+                let catchElement = $(this).parent();
+                let data = getCatchObject(catchElement);
+
+                let catchId = catchElement.attr('data-id');
+
+                request('PUT', `/biggestCatches/${catchId}`, data)
+                    .then(loadCatches)
+                    .catch(displayError);
+            }
+
+            function deleteCatch() {
+                let catchId = $(this).parent().attr('data-id');
+
+                request('DELETE', `/biggestCatches/${catchId}`)
+                    .then(loadCatches)
+                    .catch(displayError);
+            }
+
+
+            function getCatchObject(catchElement) {
+                return {
+                    angler: catchElement.find('.angler').val(),
+                    weight: Number(catchElement.find('.weight').val()),
+                    species: catchElement.find('.species').val(),
+                    location: catchElement.find('.location').val(),
+                    bait: catchElement.find('.bait').val(),
+                    captureTime: Number(catchElement.find('.captureTime').val())
+                };
+            }
+
+            function displayError(error) {
+                let divError = $('<div>').css('color', 'red').css('font-weight', 'bold');
+                divError.text(`Error. ${error.status} (${error.statusText})`);
+
+                // $(divError).insertBefore($('body h1')).delay(2000).fadeOut(function () {
+                //     $(divError).remove();
+                // });
+
+                $(document.body).prepend(divError);                
+                
+                setTimeout(function () {
+                    $(divError).fadeOut(function () {
+                        $(divError).remove();
+                    });
+                }, 2000);
+            }
+        }
+    </script>
+</body>
+
+</html>

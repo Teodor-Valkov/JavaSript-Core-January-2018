@@ -1,0 +1,17 @@
+<tr data-id="{{_id}}">
+  <td>
+    <div>
+      <img src="{{imageUrl}}" />
+    </div>
+  </td>
+  <td>{{title}}</td>
+  <td>{{publisher}}</td>
+  <td>{{description}}</td>
+  <td>{{price}}</td>
+  <td>
+    {{#if isAuthor}}
+    <a class="edit" href="#">[Edit]</a>
+    <a class="delete" href="#">[Delete]</a>
+    {{/if}}
+  </td>
+</tr>
