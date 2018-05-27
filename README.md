@@ -5,3 +5,5 @@
 - JS Fundamentals - all the exercises and exams regarding JavaScript Fundamentals: Conditional Statements, Loops, Functions and Arrow Functions, Arrays and Matrices, String processing and Regular Expressions, Objects and Associative arrays.
 
 - JS Advanced - all the exercises and exams regarding JavaScript Advaced: DOM and BOM manipulations, jQuery, Advanced Functions, Object Composition, Unit Testing, JS Classes and Prototype Chain.
+
+- JS Applications - all the exercises and exams regarding JavaScript Applications: async programming, jQuery and AJAX, Firebase and Kinvey, Sammy and Handlebars, single page applications.
